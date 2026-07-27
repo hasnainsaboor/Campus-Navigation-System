@@ -1,0 +1,2313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Campus Navigator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #0c0f1a;
+        --surface: #131829;
+        --surface2: #1a2035;
+        --border: rgba(255, 255, 255, 0.07);
+        --accent: #6c63ff;
+        --accent2: #00e5a0;
+        --warn: #ff6b4a;
+        --text: #e8eaf6;
+        --muted: #6b7280;
+        --mono: "Space Mono", monospace;
+        --sans: "Syne", sans-serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      .grid-bg {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: 0;
+        background-image:
+          linear-gradient(rgba(108, 99, 255, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(108, 99, 255, 0.04) 1px, transparent 1px);
+        background-size: 40px 40px;
+      }
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        position: relative;
+        z-index: 1;
+      }
+      header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--accent);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .logo h1 {
+        font-size: 22px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+      }
+      .logo span {
+        font-size: 12px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .mode-tabs {
+        display: flex;
+        gap: 6px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 5px;
+      }
+      .tab {
+        padding: 7px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        transition: all 0.2s;
+        font-family: var(--sans);
+        letter-spacing: 0.3px;
+      }
+      .tab:hover {
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .tab.on {
+        background: var(--accent);
+        color: #fff;
+      }
+      .tab.on.green {
+        background: var(--accent2);
+        color: #c3c7d7;
+      }
+      .tab.on.red {
+        background: var(--warn);
+        color: #fff;
+      }
+      .admin-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--muted);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        flex-shrink: 0;
+      }
+      .admin-btn:hover {
+        color: var(--warn);
+        border-color: rgba(255, 107, 74, 0.4);
+        background: rgba(255, 107, 74, 0.07);
+      }
+      .admin-btn.active {
+        background: var(--warn);
+        color: #fff;
+        border-color: var(--warn);
+      }
+      .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        gap: 16px;
+      }
+      @media (max-width: 750px) {
+        .main-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .map-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        overflow: hidden;
+      }
+      .map-header {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .map-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .dot-red {
+        background: #ff5f57;
+      }
+      .dot-yellow {
+        background: #febc2e;
+      }
+      .dot-green {
+        background: #28c840;
+      }
+      .map-title {
+        font-size: 13px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      #map-canvas {
+        background: #dcedc8;
+      }
+      .hint-bar {
+        padding: 10px 18px;
+        border-top: 1px solid var(--border);
+        font-size: 11px;
+        color: var(--muted);
+        font-family: var(--mono);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hint-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .panel-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-family: var(--mono);
+        margin-bottom: 12px;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .stat-box {
+        background: var(--surface2);
+        border-radius: 10px;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+      }
+      .stat-label {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        margin-bottom: 4px;
+      }
+      .stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--text);
+      }
+      .stat-value.sm {
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.4;
+        padding-top: 2px;
+      }
+      .building-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      .bld-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--surface2);
+        cursor: pointer;
+        transition: all 0.15s;
+      }
+      .bld-item:hover {
+        border-color: rgba(108, 99, 255, 0.4);
+        background: rgba(108, 99, 255, 0.05);
+      }
+      .bld-item.active {
+        border-color: var(--accent);
+        background: rgba(108, 99, 255, 0.1);
+      }
+      .bld-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      .bld-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .bld-name {
+        font-size: 13px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .bld-sub {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .result-panel {
+        background: var(--surface2);
+        border: 1px solid rgba(108, 99, 255, 0.3);
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: none;
+      }
+      .result-panel.show {
+        display: block;
+      }
+      .result-title {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        color: var(--accent);
+        font-family: var(--mono);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+      .path-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .path-step {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+      }
+      .step-num {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-family: var(--mono);
+      }
+      .step-num.green {
+        background: var(--accent2);
+        color: #0c0f1a;
+      }
+      .dist-badge {
+        margin-top: 10px;
+        padding: 6px 10px;
+        background: var(--surface);
+        border-radius: 8px;
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--accent2);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      .leg {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .leg-line {
+        width: 18px;
+        height: 3px;
+        border-radius: 2px;
+      }
+      .leg-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .info-card {
+        background: var(--surface2);
+        border: 1px solid rgba(0, 229, 160, 0.25);
+        border-radius: 12px;
+        padding: 14px;
+        display: none;
+        margin-bottom: 0;
+      }
+      .info-card.show {
+        display: block;
+      }
+      .info-card-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border);
+      }
+      .info-icon-big {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      .info-bld-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .info-bld-sub {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        margin-top: 2px;
+      }
+      .info-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .info-row:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+      .info-label {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        width: 44px;
+        flex-shrink: 0;
+        padding-top: 1px;
+      }
+      .info-val {
+        font-size: 12px;
+        color: var(--text);
+      }
+      .info-val.empty {
+        color: var(--muted);
+        font-style: italic;
+        font-size: 11px;
+      }
+      .hashmap-tag {
+        font-size: 9px;
+        font-family: var(--mono);
+        padding: 2px 6px;
+        border-radius: 4px;
+        background: rgba(108, 99, 255, 0.15);
+        color: #a89cff;
+        margin-left: 6px;
+        vertical-align: middle;
+      }
+      .overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        z-index: 100;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+      }
+      .overlay.show {
+        display: flex;
+      }
+      .modal {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 28px;
+        width: 340px;
+        max-width: 90vw;
+        position: relative;
+        animation: popIn 0.25s ease;
+      }
+      @keyframes popIn {
+        from {
+          transform: scale(0.92);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      .modal-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(255, 107, 74, 0.15);
+        border: 1px solid rgba(255, 107, 74, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        margin: 0 auto 16px;
+      }
+      .modal h2 {
+        font-size: 18px;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 4px;
+      }
+      .modal p {
+        font-size: 12px;
+        color: var(--muted);
+        text-align: center;
+        font-family: var(--mono);
+        margin-bottom: 22px;
+      }
+      .modal label {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+      }
+      .modal input {
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        padding: 11px 13px;
+        outline: none;
+        transition: border-color 0.15s;
+        margin-bottom: 12px;
+      }
+      .modal input:focus {
+        border-color: rgba(255, 107, 74, 0.5);
+      }
+      .modal input::placeholder {
+        color: var(--muted);
+      }
+      .login-btn {
+        width: 100%;
+        padding: 11px;
+        border-radius: 10px;
+        border: none;
+        background: var(--warn);
+        color: #fff;
+        font-family: var(--sans);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-top: 4px;
+      }
+      .login-btn:hover {
+        background: #e05a38;
+        transform: translateY(-1px);
+      }
+      .login-err {
+        font-size: 11px;
+        color: var(--warn);
+        font-family: var(--mono);
+        text-align: center;
+        margin-top: 8px;
+        min-height: 16px;
+      }
+      .modal-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+      .modal-close:hover {
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 200;
+        display: none;
+        backdrop-filter: blur(3px);
+      }
+      .drawer-overlay.show {
+        display: block;
+      }
+      .drawer {
+        position: fixed;
+        top: 0;
+        right: -520px;
+        width: 500px;
+        max-width: 95vw;
+        height: 100vh;
+        background: var(--surface);
+        border-left: 1px solid var(--border);
+        z-index: 201;
+        transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .drawer.open {
+        right: 0;
+      }
+      .drawer-header {
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      .drawer-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .drawer-logo {
+        width: 36px;
+        height: 36px;
+        border-radius: 9px;
+        background: var(--warn);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+      .drawer-title {
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .drawer-sub {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .drawer-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s;
+      }
+      .drawer-close:hover {
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .drawer-tabs {
+        display: flex;
+        gap: 5px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .dtab {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        background: transparent;
+        color: var(--muted);
+        font-family: var(--sans);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.15s;
+      }
+      .dtab:hover {
+        color: var(--text);
+        background: var(--surface2);
+      }
+      .dtab.on {
+        background: var(--accent);
+        color: #fff;
+      }
+      .dtab.on.g {
+        background: var(--accent2);
+        color: #0c0f1a;
+      }
+      .dtab.on.o {
+        background: var(--warn);
+        color: #fff;
+      }
+      .drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+      }
+      .drawer-body::-webkit-scrollbar {
+        width: 4px;
+      }
+      .drawer-body::-webkit-scrollbar-thumb {
+        background: rgba(108, 99, 255, 0.3);
+        border-radius: 4px;
+      }
+      .dfield {
+        margin-bottom: 12px;
+      }
+      .dfield label {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+      .dfield input,
+      .dfield select {
+        width: 100%;
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: 13px;
+        padding: 9px 12px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+      .dfield input:focus,
+      .dfield select:focus {
+        border-color: rgba(108, 99, 255, 0.5);
+      }
+      .dfield input::placeholder {
+        color: var(--muted);
+      }
+      .dfield select option {
+        background: #1a2035;
+      }
+      .dbtn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: none;
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        width: 100%;
+        justify-content: center;
+        margin-top: 4px;
+      }
+      .dbtn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .dbtn-primary:hover {
+        background: #5a52e0;
+      }
+      .dbtn-green {
+        background: var(--accent2);
+        color: #0c0f1a;
+      }
+      .dbtn-green:hover {
+        background: #00c98d;
+      }
+      .dbtn-orange {
+        background: var(--warn);
+        color: #fff;
+      }
+      .dbtn-orange:hover {
+        background: #e05a38;
+      }
+      .dsection {
+        display: none;
+      }
+      .dsection.on {
+        display: block;
+      }
+      .dcard {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+      }
+      .dlist {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 10px;
+      }
+      .ditem {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 9px 11px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        transition: border-color 0.15s;
+      }
+      .ditem:hover {
+        border-color: rgba(108, 99, 255, 0.3);
+      }
+      .ditem-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+      }
+      .ditem-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .ditem-name {
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .ditem-sub {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .ddel {
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.15s;
+      }
+      .ddel:hover {
+        color: var(--warn);
+        border-color: rgba(255, 107, 74, 0.4);
+        background: rgba(255, 107, 74, 0.08);
+      }
+      .path-badge {
+        font-size: 10px;
+        font-family: var(--mono);
+        padding: 2px 7px;
+        border-radius: 5px;
+        background: rgba(108, 99, 255, 0.15);
+        color: #a89cff;
+        flex-shrink: 0;
+      }
+      .dempty {
+        text-align: center;
+        padding: 28px 0;
+        color: var(--muted);
+        font-size: 11px;
+        font-family: var(--mono);
+      }
+      .dempty .ei {
+        font-size: 26px;
+        margin-bottom: 6px;
+      }
+      .admin-user-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-family: var(--mono);
+        color: var(--accent2);
+        background: rgba(0, 229, 160, 0.1);
+        border: 1px solid rgba(0, 229, 160, 0.2);
+        border-radius: 8px;
+        padding: 4px 10px;
+      }
+      .drawer-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      .dst {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+      .dst-l {
+        font-size: 10px;
+        color: var(--muted);
+        font-family: var(--mono);
+        margin-bottom: 3px;
+      }
+      .dst-v {
+        font-size: 20px;
+        font-weight: 800;
+      }
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(90px);
+        background: var(--accent2);
+        color: #0c0f1a;
+        padding: 11px 22px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        font-family: var(--mono);
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 9999;
+        pointer-events: none;
+        white-space: nowrap;
+      }
+      .toast.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      .toast.err {
+        background: var(--warn);
+        color: #fff;
+      }
+
+      :root {
+        --accent: #2e7d32;
+        --accent2: #66bb6a;
+        --surface: #ffffff;
+        --surface2: #f7f8f5;
+        --text: #263238;
+        --muted: #6f7d86;
+        --border: rgba(0, 0, 0, 0.08);
+      }
+      body {
+        background: #eef3ed;
+      }
+      .grid-bg {
+        opacity: 0.15;
+      }
+      .logo-icon {
+        background: #4caf50;
+        color: #fff;
+        box-shadow: 0 6px 18px rgba(76, 175, 80, 0.25);
+      }
+      .map-card {
+        background: #f8faf8;
+        border: 2px solid #d7e3d3;
+        border-radius: 22px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+      }
+      .map-header {
+        background: #f1f7f1;
+      }
+      #map-canvas {
+        background:
+          repeating-linear-gradient(
+            0deg,
+            #edf4ed,
+            #edf4ed 40px,
+            #e6efe6 40px,
+            #e6efe6 41px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            #edf4ed,
+            #edf4ed 40px,
+            #e6efe6 40px,
+            #e6efe6 41px
+          );
+      }
+      .panel,
+      .info-card,
+      .result-panel {
+        background: #fff;
+        border: 1px solid #dce6dc;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+      .stat-box {
+        background: #fff;
+        border: 1px solid #dce6dc;
+      }
+      .bld-item {
+        background: #fff;
+        border-left: 4px solid #4caf50;
+        transition: 0.2s;
+      }
+      .bld-item:hover {
+        transform: translateX(4px);
+        background: #f5fbf5;
+      }
+      .bld-item.active {
+        background: #e8f5e9;
+      }
+      .tab.on {
+        background: #4caf50;
+        color: #fff;
+      }
+      .result-panel {
+        background: #f4fbf4;
+      }
+      .hint-bar {
+        background: #f1f7f1;
+      }
+      .hashmap-tag {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+      .admin-btn {
+        background: #fff;
+        border: 1px solid #dce6dc;
+      }
+      .admin-btn:hover {
+        background: #f3faf3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid-bg"></div>
+    <div class="container">
+      <header>
+        <div class="logo">
+          <div class="logo-icon">🗺</div>
+          <div>
+            <h1>Campus Navigator</h1>
+            <span id="api-status-text">v1.0 · connecting to backend...</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="mode-tabs">
+            <button class="tab on" id="t-all" onclick="setMode('all')">
+              Overview
+            </button>
+            <button class="tab" id="t-short" onclick="setMode('short')">
+              Shortest Path
+            </button>
+            <button class="tab" id="t-bfs" onclick="setMode('bfs')">BFS</button>
+          </div>
+          <button
+            class="admin-btn"
+            id="admin-btn"
+            title="Admin Panel"
+            onclick="openAdmin()"
+          >
+            🔒
+          </button>
+        </div>
+      </header>
+      <div class="main-grid">
+        <div class="map-card">
+          <div class="map-header">
+            <div class="map-header-left">
+              <div class="dot dot-red"></div>
+              <div class="dot dot-yellow"></div>
+              <div class="dot dot-green"></div>
+              <span class="map-title">campus_map.db</span>
+            </div>
+            <span class="map-title" id="mode-label">mode: overview</span>
+          </div>
+          <canvas id="map-canvas"></canvas>
+          <div class="hint-bar">
+            <div class="hint-dot"></div>
+            <span id="hint-text">Loading buildings from backend...</span>
+          </div>
+        </div>
+        <div class="sidebar">
+          <div class="panel">
+            <div class="panel-title">Stats</div>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <div class="stat-label">buildings</div>
+                <div class="stat-value" id="s-buildings">—</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">paths</div>
+                <div class="stat-value" id="s-paths">—</div>
+              </div>
+              <div class="stat-box" style="grid-column: span 2">
+                <div class="stat-label">selected</div>
+                <div class="stat-value sm" id="i-sel">none</div>
+              </div>
+              <div class="stat-box" style="grid-column: span 2">
+                <div class="stat-label">distance</div>
+                <div class="stat-value" id="i-dist">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="info-card" id="info-card">
+            <div class="info-card-header">
+              <div class="info-icon-big" id="info-icon">🏛</div>
+              <div>
+                <div class="info-bld-name" id="info-name">—</div>
+                <div class="info-bld-sub">
+                  HashMap lookup<span class="hashmap-tag"
+                    >map&lt;string,string&gt;</span
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="info-row">
+              <span class="info-label">DEPT</span
+              ><span class="info-val" id="info-dept">—</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">HOURS</span
+              ><span class="info-val" id="info-hours">—</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Buildings</div>
+            <div class="building-list" id="bld-list">
+              <div
+                style="
+                  color: var(--muted);
+                  font-size: 12px;
+                  font-family: var(--mono);
+                "
+              >
+                Loading...
+              </div>
+            </div>
+          </div>
+          <div class="result-panel" id="result-panel">
+            <div class="result-title" id="res-title">Result</div>
+            <div class="path-steps" id="path-steps"></div>
+            <div class="dist-badge" id="dist-badge" style="display: none">
+              <span>Total distance</span><span id="dist-val">—</span>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Legend</div>
+            <div class="legend">
+              <div class="leg">
+                <div class="leg-line" style="background: #6c63ff"></div>
+                Normal path
+              </div>
+              <div class="leg">
+                <div class="leg-line" style="background: #ff6b4a"></div>
+                Shortest
+              </div>
+              <div class="leg">
+                <div class="leg-line" style="background: #00e5a0"></div>
+                BFS
+              </div>
+              <div class="leg">
+                <div class="leg-dot" style="background: #6c63ff"></div>
+                Building
+              </div>
+              <div class="leg">
+                <div class="leg-dot" style="background: #ff6b4a"></div>
+                On path
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="login-overlay">
+      <div class="modal">
+        <button class="modal-close" onclick="closeLogin()">✕</button>
+        <div class="modal-icon">🔒</div>
+        <h2>Admin Login</h2>
+        <p>Enter your credentials to access the admin panel</p>
+        <label>Username</label
+        ><input
+          id="l-user"
+          type="text"
+          placeholder="admin"
+          autocomplete="username"
+        />
+        <label>Password</label
+        ><input
+          id="l-pass"
+          type="password"
+          placeholder="••••••••"
+          autocomplete="current-password"
+          onkeydown="if (event.key === 'Enter') doLogin();"
+        />
+        <button class="login-btn" onclick="doLogin()">Unlock Panel →</button>
+        <div class="login-err" id="login-err"></div>
+      </div>
+    </div>
+
+    <div
+      class="drawer-overlay"
+      id="drawer-overlay"
+      onclick="closeDrawer()"
+    ></div>
+    <div class="drawer" id="admin-drawer">
+      <div class="drawer-header">
+        <div class="drawer-header-left">
+          <div class="drawer-logo">⚙️</div>
+          <div>
+            <div class="drawer-title">Admin Panel</div>
+            <div class="drawer-sub" id="drawer-sub">campus.db</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <div class="admin-user-badge" id="user-badge" style="display: none">
+            ● admin
+          </div>
+          <button class="drawer-close" onclick="closeDrawer()">✕</button>
+        </div>
+      </div>
+      <div class="drawer-tabs">
+        <button class="dtab on" id="dt-buildings" onclick="dTab('buildings')">
+          🏛 Buildings
+        </button>
+        <button class="dtab" id="dt-paths" onclick="dTab('paths')">
+          🔗 Paths
+        </button>
+        <button class="dtab" id="dt-info" onclick="dTab('info')">
+          📋 Info
+        </button>
+      </div>
+      <div class="drawer-body">
+        <div class="dsection on" id="ds-buildings">
+          <div class="drawer-stats">
+            <div class="dst">
+              <div class="dst-l">buildings</div>
+              <div class="dst-v" id="ds-b">—</div>
+            </div>
+            <div class="dst">
+              <div class="dst-l">paths</div>
+              <div class="dst-v" id="ds-p">—</div>
+            </div>
+          </div>
+          <div class="dcard">
+            <div class="panel-title">Add Building</div>
+            <div class="dfield">
+              <label>Name *</label
+              ><input id="ab-name" placeholder="e.g. Science Block" />
+            </div>
+            <div class="dfield">
+              <label>Department</label
+              ><input id="ab-dept" placeholder="e.g. Physics" />
+            </div>
+            <div class="dfield">
+              <label>Hours</label
+              ><input id="ab-hours" placeholder="e.g. Mon–Fri 8am–6pm" />
+            </div>
+            <button class="dbtn dbtn-primary" onclick="addBuilding()">
+              ＋ Add Building
+            </button>
+          </div>
+          <div class="panel-title" style="margin-top: 14px">All Buildings</div>
+          <div class="dlist" id="ab-list">
+            <div class="dempty">
+              <div class="ei">🏛</div>
+              Loading...
+            </div>
+          </div>
+        </div>
+        <div class="dsection" id="ds-paths">
+          <div class="dcard">
+            <div class="panel-title">Add Path</div>
+            <div class="dfield">
+              <label>From</label
+              ><select id="ap-from">
+                <option value="">Select building…</option>
+              </select>
+            </div>
+            <div class="dfield">
+              <label>To</label
+              ><select id="ap-to">
+                <option value="">Select building…</option>
+              </select>
+            </div>
+            <div class="dfield">
+              <label>Distance (meters)</label
+              ><input
+                id="ap-weight"
+                type="number"
+                placeholder="e.g. 120"
+                min="1"
+              />
+            </div>
+            <button class="dbtn dbtn-green" onclick="addPath()">
+              ＋ Add Path
+            </button>
+          </div>
+          <div class="panel-title" style="margin-top: 14px">All Paths</div>
+          <div class="dlist" id="ap-list">
+            <div class="dempty">
+              <div class="ei">🔗</div>
+              Loading...
+            </div>
+          </div>
+        </div>
+        <div class="dsection" id="ds-info">
+          <div class="dcard">
+            <div class="panel-title">Change Admin Password</div>
+            <div class="dfield">
+              <label>Old Password</label
+              ><input
+                id="old-pass"
+                type="password"
+                placeholder="Enter old password"
+              />
+            </div>
+            <div class="dfield">
+              <label>New Password</label
+              ><input
+                id="new-pass"
+                type="password"
+                placeholder="Enter new password"
+              />
+            </div>
+            <button class="dbtn dbtn-orange" onclick="changePassword()">
+              🔐 Change Password
+            </button>
+          </div>
+          <div class="dcard">
+            <div class="panel-title">Edit Building Info</div>
+            <div class="dfield">
+              <label>Select Building</label
+              ><select id="ai-bld" onchange="loadInfo()">
+                <option value="">Choose building…</option>
+              </select>
+            </div>
+            <div class="dfield">
+              <label>Department</label
+              ><input id="ai-dept" placeholder="Department name" />
+            </div>
+            <div class="dfield">
+              <label>Hours</label
+              ><input id="ai-hours" placeholder="e.g. Mon–Fri 8am–6pm" />
+            </div>
+            <button class="dbtn dbtn-orange" onclick="saveInfo()">
+              💾 Save Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+      const API = "http://localhost:5000";
+      const COLORS = [
+        "#6c63ff",
+        "#00e5a0",
+        "#ff6b4a",
+        "#f9a825",
+        "#26c6da",
+        "#e91e63",
+        "#ff9800",
+        "#4caf50",
+        "#ab47bc",
+        "#ef5350",
+      ];
+      const ICONS = [
+        "🏢",
+        "📚",
+        "🍔",
+        "🕌",
+        "🧪",
+        "🚗",
+        "⚽",
+        "🎓",
+        "💻",
+        "🏥",
+      ];
+      const FILLS = COLORS.map((c) => c + "22");
+
+      let BUILDINGS = [],
+        EDGES = [];
+      let mode = "all",
+        sel = [],
+        pathIds = [],
+        bfsOrd = [],
+        bfsTreeEdges = [];
+      let loggedIn = false,
+        currentUser = "";
+      let tick = 0;
+
+      const canvas = document.getElementById("map-canvas");
+      const ctx = canvas.getContext("2d");
+      let W, H;
+
+      function toast(msg, err = false) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.className = "toast" + (err ? " err" : "");
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2600);
+      }
+
+      async function loadData() {
+        try {
+          const [bRes, pRes] = await Promise.all([
+            fetch(`${API}/buildings`),
+            fetch(`${API}/paths`),
+          ]);
+          const bData = await bRes.json();
+          const pData = await pRes.json();
+          const names = bData.buildings || [];
+          const paths = pData.paths || [];
+          BUILDINGS = names.map((name, i) => {
+            const angle =
+              (2 * Math.PI * i) / Math.max(names.length, 1) - Math.PI / 2;
+            return {
+              id: i,
+              name,
+              icon: ICONS[i % ICONS.length],
+              col: COLORS[i % COLORS.length],
+              fill: FILLS[i % FILLS.length],
+              x: 0.5 + 0.35 * Math.cos(angle),
+              y: 0.5 + 0.3 * Math.sin(angle),
+            };
+          });
+          EDGES = paths
+            .map((p) => {
+              const f = BUILDINGS.findIndex((b) => b.name === p.from);
+              const t = BUILDINGS.findIndex((b) => b.name === p.to);
+              return f >= 0 && t >= 0 ? { f, t, w: p.weight } : null;
+            })
+            .filter(Boolean);
+          document.getElementById("s-buildings").textContent = BUILDINGS.length;
+          document.getElementById("s-paths").textContent = EDGES.length;
+          document.getElementById("api-status-text").textContent =
+            "v1.0 · connected to backend ✓";
+          document.getElementById("hint-text").textContent =
+            "Click a building to explore";
+          document.getElementById("ds-b").textContent = BUILDINGS.length;
+          document.getElementById("ds-p").textContent = EDGES.length;
+          buildList();
+          renderAdminLists();
+          resize();
+        } catch (e) {
+          document.getElementById("api-status-text").textContent =
+            "backend offline — run: python server.py";
+          document.getElementById("hint-text").textContent =
+            "Cannot connect to localhost:5000";
+          document.getElementById("s-buildings").textContent = "!";
+          document.getElementById("s-paths").textContent = "!";
+          resize();
+        }
+      }
+
+      function openAdmin() {
+        if (loggedIn) {
+          openDrawer();
+          return;
+        }
+        document.getElementById("login-overlay").classList.add("show");
+        document.getElementById("l-user").value = "";
+        document.getElementById("l-pass").value = "";
+        document.getElementById("login-err").textContent = "";
+        setTimeout(() => document.getElementById("l-user").focus(), 50);
+      }
+      function closeLogin() {
+        document.getElementById("login-overlay").classList.remove("show");
+      }
+      async function doLogin() {
+        const username = document.getElementById("l-user").value.trim();
+        const password = document.getElementById("l-pass").value;
+        const errEl = document.getElementById("login-err");
+        errEl.textContent = "";
+        if (!username || !password) {
+          errEl.textContent = "enter username and password";
+          return;
+        }
+        try {
+          const r = await fetch(`${API}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+          const d = await r.json();
+          if (d.error) {
+            errEl.textContent = d.error;
+            return;
+          }
+          loggedIn = true;
+          currentUser = username;
+          closeLogin();
+          document.getElementById("admin-btn").classList.add("active");
+          document.getElementById("admin-btn").textContent = "🔓";
+          document.getElementById("user-badge").textContent = "● " + username;
+          document.getElementById("user-badge").style.display = "inline-flex";
+          openDrawer();
+        } catch (e) {
+          errEl.textContent = "cannot reach backend";
+        }
+      }
+      function openDrawer() {
+        document.getElementById("drawer-overlay").classList.add("show");
+        document.getElementById("admin-drawer").classList.add("open");
+        renderAdminLists();
+      }
+      function closeDrawer() {
+        document.getElementById("drawer-overlay").classList.remove("show");
+        document.getElementById("admin-drawer").classList.remove("open");
+      }
+      function dTab(t) {
+        ["buildings", "paths", "info"].forEach((id) => {
+          document.getElementById("ds-" + id).classList.remove("on");
+          document.getElementById("dt-" + id).classList.remove("on", "g", "o");
+        });
+        document.getElementById("ds-" + t).classList.add("on");
+        const btn = document.getElementById("dt-" + t);
+        btn.classList.add("on");
+        if (t === "paths") btn.classList.add("g");
+        if (t === "info") btn.classList.add("o");
+      }
+
+      function renderAdminLists() {
+        const bl = document.getElementById("ab-list");
+        bl.innerHTML = BUILDINGS.length
+          ? BUILDINGS.map(
+              (b, i) =>
+                `<div class="ditem"><div class="ditem-icon" style="background:${FILLS[i % FILLS.length]}">${b.icon}</div><div class="ditem-info"><div class="ditem-name">${esc(b.name)}</div><div class="ditem-sub">building #${i}</div></div><button class="ddel" onclick="deleteBuilding(${JSON.stringify(b.name)})">✕</button></div>`,
+            ).join("")
+          : '<div class="dempty"><div class="ei">🏛</div>No buildings yet</div>';
+        const pl = document.getElementById("ap-list");
+        pl.innerHTML = EDGES.length
+          ? EDGES.map(
+              (e, i) =>
+                `<div class="ditem"><div class="ditem-info"><div class="ditem-name" style="display:flex;align-items:center;gap:5px;font-size:12px"><span>${esc(BUILDINGS[e.f]?.name || "?")}</span><span style="color:var(--muted);font-size:10px">↔</span><span>${esc(BUILDINGS[e.t]?.name || "?")}</span></div><div class="ditem-sub">edge #${i}</div></div><span class="path-badge">${e.w}m</span><button class="ddel" onclick="deletePath(${JSON.stringify(BUILDINGS[e.f]?.name)},${JSON.stringify(BUILDINGS[e.t]?.name)})">✕</button></div>`,
+            ).join("")
+          : '<div class="dempty"><div class="ei">🔗</div>No paths yet</div>';
+        const opts =
+          '<option value="">Select building…</option>' +
+          BUILDINGS.map(
+            (b) => `<option value="${esc(b.name)}">${esc(b.name)}</option>`,
+          ).join("");
+        document.getElementById("ap-from").innerHTML = opts;
+        document.getElementById("ap-to").innerHTML = opts;
+        document.getElementById("ai-bld").innerHTML =
+          '<option value="">Choose building…</option>' +
+          BUILDINGS.map(
+            (b) => `<option value="${esc(b.name)}">${esc(b.name)}</option>`,
+          ).join("");
+        document.getElementById("ds-b").textContent = BUILDINGS.length;
+        document.getElementById("ds-p").textContent = EDGES.length;
+      }
+
+      async function addBuilding() {
+        const name = document.getElementById("ab-name").value.trim();
+        const dept = document.getElementById("ab-dept").value.trim();
+        const hours = document.getElementById("ab-hours").value.trim();
+        if (!name) {
+          toast("Building name is required", true);
+          return;
+        }
+        try {
+          const r = await fetch(`${API}/buildings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, dept, hours }),
+          });
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Building added!");
+          document.getElementById("ab-name").value = "";
+          document.getElementById("ab-dept").value = "";
+          document.getElementById("ab-hours").value = "";
+          await loadData();
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+      async function deleteBuilding(name) {
+        if (
+          !confirm(
+            `Delete "${name}"?\nAll connected paths will also be removed.`,
+          )
+        )
+          return;
+        try {
+          const r = await fetch(
+            `${API}/buildings/${encodeURIComponent(name)}`,
+            { method: "DELETE" },
+          );
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Deleted!");
+          await loadData();
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+      async function addPath() {
+        const from = document.getElementById("ap-from").value;
+        const to = document.getElementById("ap-to").value;
+        const weight = parseInt(document.getElementById("ap-weight").value);
+        if (!from || !to) {
+          toast("Select both buildings", true);
+          return;
+        }
+        if (from === to) {
+          toast("From and To must differ", true);
+          return;
+        }
+        if (!weight || weight < 1) {
+          toast("Enter a valid distance", true);
+          return;
+        }
+        try {
+          const r = await fetch(`${API}/paths`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ from, to, weight }),
+          });
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Path added!");
+          document.getElementById("ap-weight").value = "";
+          await loadData();
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+      async function deletePath(from, to) {
+        if (!confirm(`Delete path "${from}" ↔ "${to}"?`)) return;
+        try {
+          const r = await fetch(`${API}/paths`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ from, to }),
+          });
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Path deleted!");
+          await loadData();
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+      async function loadInfo() {
+        const name = document.getElementById("ai-bld").value;
+        if (!name) return;
+        try {
+          const r = await fetch(
+            `${API}/building-info/${encodeURIComponent(name)}`,
+          );
+          const d = await r.json();
+          document.getElementById("ai-dept").value =
+            d.dept && d.dept !== "N/A" ? d.dept : "";
+          document.getElementById("ai-hours").value =
+            d.hours && d.hours !== "N/A" ? d.hours : "";
+        } catch (e) {}
+      }
+      async function saveInfo() {
+        const name = document.getElementById("ai-bld").value;
+        const dept = document.getElementById("ai-dept").value.trim();
+        const hours = document.getElementById("ai-hours").value.trim();
+        if (!name) {
+          toast("Select a building first", true);
+          return;
+        }
+        try {
+          const r = await fetch(
+            `${API}/building-info/${encodeURIComponent(name)}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ dept, hours }),
+            },
+          );
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Info saved!");
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+      async function changePassword() {
+        const old_password = document.getElementById("old-pass").value;
+        const new_password = document.getElementById("new-pass").value;
+        if (!old_password || !new_password) {
+          toast("Fill both fields", true);
+          return;
+        }
+        try {
+          const r = await fetch(`${API}/change-password`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              username: currentUser,
+              old_password,
+              new_password,
+            }),
+          });
+          const d = await r.json();
+          if (d.error) {
+            toast(d.error, true);
+            return;
+          }
+          toast("Password changed successfully!");
+          document.getElementById("old-pass").value = "";
+          document.getElementById("new-pass").value = "";
+        } catch (e) {
+          toast("Backend offline", true);
+        }
+      }
+
+      async function fetchBuildingInfo(name) {
+        try {
+          const r = await fetch(
+            `${API}/building-info/${encodeURIComponent(name)}`,
+          );
+          return await r.json();
+        } catch (e) {
+          return null;
+        }
+      }
+      function showInfoCard(b, info) {
+        const card = document.getElementById("info-card");
+        document.getElementById("info-icon").textContent = b.icon;
+        document.getElementById("info-icon").style.background = b.fill;
+        document.getElementById("info-name").textContent = b.name;
+        const hasDept = info && info.dept && info.dept !== "N/A";
+        const hasHours = info && info.hours && info.hours !== "N/A";
+        document.getElementById("info-dept").className =
+          "info-val" + (hasDept ? "" : " empty");
+        document.getElementById("info-hours").className =
+          "info-val" + (hasHours ? "" : " empty");
+        document.getElementById("info-dept").textContent = hasDept
+          ? info.dept
+          : "not set — use admin panel";
+        document.getElementById("info-hours").textContent = hasHours
+          ? info.hours
+          : "not set";
+        card.classList.add("show");
+      }
+      function hideInfoCard() {
+        document.getElementById("info-card").classList.remove("show");
+      }
+
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        W = rect.width;
+        H = 480;
+        canvas.width = W * devicePixelRatio;
+        canvas.height = H * devicePixelRatio;
+        canvas.style.width = W + "px";
+        canvas.style.height = H + "px";
+        ctx.scale(devicePixelRatio, devicePixelRatio);
+        draw();
+      }
+
+      function bx(b) {
+        return b.x * W;
+      }
+      function by(b) {
+        return b.y * H;
+      }
+      function onPath(e) {
+        for (let i = 0; i < pathIds.length - 1; i++)
+          if (
+            (pathIds[i] === e.f && pathIds[i + 1] === e.t) ||
+            (pathIds[i] === e.t && pathIds[i + 1] === e.f)
+          )
+            return true;
+        return false;
+      }
+      function onBfs(e) {
+        return bfsTreeEdges.some(
+          ([u, v]) => (u === e.f && v === e.t) || (u === e.t && v === e.f),
+        );
+      }
+
+      // ── ANIMATED FOUNTAIN ──
+      function drawFountain(cx, cy, t) {
+        const NUM_JETS = 8;
+        const JET_LEN = 38;
+        const BASIN_R = 44;
+        const INNER_R = 18;
+
+        // Outer basin shadow
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.fillStyle = "#1a5276";
+        ctx.beginPath();
+        ctx.ellipse(cx + 4, cy + 6, BASIN_R, BASIN_R * 0.38, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Outer basin stone ring
+        ctx.beginPath();
+        ctx.arc(cx, cy, BASIN_R, 0, Math.PI * 2);
+        ctx.fillStyle = "#b0bec5";
+        ctx.fill();
+        ctx.strokeStyle = "#78909c";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Water surface in basin — ripple rings animated
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, BASIN_R - 4, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Base water colour
+        ctx.fillStyle = "#4fc3f7";
+        ctx.fillRect(cx - BASIN_R, cy - BASIN_R, BASIN_R * 2, BASIN_R * 2);
+
+        // Animated ripple rings
+        for (let r = 0; r < 3; r++) {
+          const phase = (t * 0.04 + r * 0.33) % 1;
+          const rippleR = phase * (BASIN_R - 6);
+          ctx.beginPath();
+          ctx.arc(cx, cy, rippleR, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,255,255,${0.5 * (1 - phase)})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Center stone pedestal
+        ctx.beginPath();
+        ctx.arc(cx, cy, INNER_R, 0, Math.PI * 2);
+        ctx.fillStyle = "#cfd8dc";
+        ctx.fill();
+        ctx.strokeStyle = "#90a4ae";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // ── Water jets — arc out and fall back
+        for (let i = 0; i < NUM_JETS; i++) {
+          const baseAngle = (i / NUM_JETS) * Math.PI * 2;
+          // each jet has a slight phase offset
+          const phase = t * 0.03 + i * ((Math.PI * 2) / NUM_JETS);
+          const sway = Math.sin(phase) * 0.18; // gentle side sway
+          const jetAngle = baseAngle + sway;
+          const heightPulse = 0.82 + 0.18 * Math.sin(t * 0.05 + i * 1.1);
+
+          const startX = cx + Math.cos(jetAngle) * INNER_R * 0.7;
+          const startY = cy + Math.sin(jetAngle) * INNER_R * 0.7;
+
+          const peakX = cx + Math.cos(jetAngle) * JET_LEN * 0.55;
+          const peakY =
+            cy + Math.sin(jetAngle) * JET_LEN * 0.55 - JET_LEN * heightPulse;
+
+          const endX = cx + Math.cos(jetAngle) * (BASIN_R - 8);
+          const endY = cy + Math.sin(jetAngle) * (BASIN_R - 8) * 0.35 + 6;
+
+          const alpha = 0.6 + 0.4 * Math.sin(t * 0.04 + i);
+
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          ctx.strokeStyle = "#b3e5fc";
+          ctx.lineWidth = 2.2;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(startX, startY);
+          ctx.quadraticCurveTo(peakX, peakY, endX, endY);
+          ctx.stroke();
+
+          // Droplet at tip of arc
+          const dropT = (t * 0.03 + i * 0.4) % 1;
+          const dropX =
+            startX + (peakX - startX) * dropT * 2 > peakX
+              ? peakX + (endX - peakX) * (dropT * 2 - 1)
+              : startX + (peakX - startX) * dropT * 2;
+          const dropY =
+            dropT < 0.5
+              ? startY + (peakY - startY) * dropT * 2
+              : peakY + (endY - peakY) * (dropT * 2 - 1);
+
+          ctx.fillStyle = "#e1f5fe";
+          ctx.beginPath();
+          ctx.arc(dropX, dropY, 2.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+
+        // Central upward jet
+        const upH = 30 + 10 * Math.sin(t * 0.06);
+        const upAlpha = 0.7 + 0.3 * Math.sin(t * 0.07);
+        ctx.save();
+        ctx.globalAlpha = upAlpha;
+        ctx.strokeStyle = "#e1f5fe";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx, cy - upH);
+        ctx.stroke();
+        // top spray
+        for (let s = -1; s <= 1; s += 2) {
+          ctx.strokeStyle = "#b3e5fc";
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - upH);
+          ctx.quadraticCurveTo(
+            cx + s * 12,
+            cy - upH - 10,
+            cx + s * 20,
+            cy - upH + 6,
+          );
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Mist/shimmer glow
+        ctx.save();
+        ctx.globalAlpha = 0.08 + 0.04 * Math.sin(t * 0.05);
+        ctx.fillStyle = "#b3e5fc";
+        ctx.beginPath();
+        ctx.arc(cx, cy, BASIN_R + 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        tick++;
+
+        // ── GRASS BACKGROUND
+        ctx.fillStyle = "#dcedc8";
+        ctx.fillRect(0, 0, W, H);
+
+        // ── PATHWAYS
+        ctx.strokeStyle = "#cfd8dc";
+        ctx.lineWidth = 24;
+        ctx.lineCap = "butt";
+        ctx.beginPath();
+        ctx.moveTo(100, H / 2);
+        ctx.lineTo(W - 100, H / 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(W / 2, 80);
+        ctx.lineTo(W / 2, H - 80);
+        ctx.stroke();
+
+        // ── ANIMATED FOUNTAIN in center
+        drawFountain(W / 2, H / 2, tick);
+
+        // ── SPORTS GROUND
+        ctx.fillStyle = "#8bc34a";
+        ctx.fillRect(W - 250, H - 170, 180, 100);
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(W - 250, H - 170, 180, 100);
+        ctx.beginPath();
+        ctx.arc(W - 160, H - 120, 20, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // ── TREES
+        function drawTree(x, y) {
+          ctx.fillStyle = "#795548";
+          ctx.fillRect(x - 3, y + 10, 6, 12);
+          ctx.beginPath();
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.fillStyle = "#2e7d32";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x - 8, y + 3, 10, 0, Math.PI * 2);
+          ctx.arc(x + 8, y + 3, 10, 0, Math.PI * 2);
+          ctx.fillStyle = "#43a047";
+          ctx.fill();
+        }
+        [
+          [70, 70],
+          [120, 110],
+          [200, 80],
+          [W - 80, 70],
+          [W - 130, 110],
+          [80, H - 80],
+          [140, H - 120],
+          [W - 100, H - 90],
+          [W - 170, H - 130],
+          [300, 70],
+          [380, 90],
+          [W - 300, 80],
+          [W - 380, 100],
+        ].forEach((t) => drawTree(t[0], t[1]));
+
+        // ── EDGES
+        EDGES.forEach((e) => {
+          const a = BUILDINGS[e.f],
+            b = BUILDINGS[e.t];
+          if (!a || !b) return;
+          const isP = onPath(e),
+            isB = onBfs(e) && mode === "bfs";
+          ctx.beginPath();
+          ctx.moveTo(bx(a), by(a));
+          ctx.lineTo(bx(b), by(b));
+          ctx.strokeStyle = isP ? "#e53935" : isB ? "#43a047" : "#757575";
+          ctx.lineWidth = isP ? 5 : 3;
+          ctx.stroke();
+          const mx = (bx(a) + bx(b)) / 2,
+            my = (by(a) + by(b)) / 2;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(mx - 18, my - 10, 36, 20);
+          ctx.fillStyle = "#000";
+          ctx.font = "12px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(e.w + "m", mx, my + 4);
+        });
+
+        // ── BUILDINGS
+        BUILDINGS.forEach((b) => {
+          const x = bx(b),
+            y = by(b);
+          const isSel = sel.includes(b.id),
+            isPath = pathIds.includes(b.id);
+          ctx.beginPath();
+          ctx.roundRect(x - 45, y - 30, 90, 60, 12);
+          ctx.fillStyle = isSel ? "#fff3e0" : "#ffffff";
+          ctx.fill();
+          ctx.strokeStyle = isPath ? "#e53935" : "#4caf50";
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.font = "20px serif";
+          ctx.textAlign = "center";
+          ctx.fillStyle = "#000";
+          ctx.fillText(b.icon, x, y - 8);
+          ctx.font = "bold 12px Arial";
+          ctx.fillText(b.name, x, y + 15);
+        });
+      }
+
+      async function getShortestPath(src, dst) {
+        try {
+          const r = await fetch(
+            `${API}/navigate?from=${encodeURIComponent(BUILDINGS[src].name)}&to=${encodeURIComponent(BUILDINGS[dst].name)}`,
+          );
+          const data = await r.json();
+          if (data.error) return null;
+          return {
+            path: data.path.map((name) =>
+              BUILDINGS.findIndex((b) => b.name === name),
+            ),
+            dist: data.distance,
+          };
+        } catch (e) {
+          return null;
+        }
+      }
+      function bfsFrom(src) {
+        const vis = Array(BUILDINGS.length).fill(false),
+          q = [src],
+          ord = [],
+          treeEdges = [];
+        vis[src] = true;
+        while (q.length) {
+          const u = q.shift();
+          ord.push(u);
+          EDGES.forEach((e) => {
+            const nb = e.f === u ? e.t : e.t === u ? e.f : -1;
+            if (nb >= 0 && !vis[nb]) {
+              vis[nb] = true;
+              treeEdges.push([u, nb]);
+              q.push(nb);
+            }
+          });
+        }
+        return { ord, treeEdges };
+      }
+
+      function setMode(m) {
+        mode = m;
+        sel = [];
+        pathIds = [];
+        bfsOrd = [];
+        bfsTreeEdges = [];
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("on", "green", "red"));
+        const tab = document.getElementById("t-" + m);
+        tab.classList.add("on");
+        if (m === "bfs") tab.classList.add("green");
+        if (m === "short") tab.classList.add("red");
+        document.getElementById("mode-label").textContent = "mode: " + m;
+        document.getElementById("i-sel").textContent = "none";
+        document.getElementById("i-dist").textContent = "—";
+        document.getElementById("result-panel").classList.remove("show");
+        document
+          .querySelectorAll(".bld-item")
+          .forEach((el) => el.classList.remove("active"));
+        hideInfoCard();
+        const hints = {
+          all: "Click a building to see details",
+          short: "Click source · then destination",
+          bfs: "Click a building to start BFS",
+        };
+        document.getElementById("hint-text").textContent = hints[m];
+        draw();
+      }
+      function showResult(title, steps, dist, isGreen) {
+        document.getElementById("res-title").textContent = title;
+        document.getElementById("res-title").style.color = isGreen
+          ? "var(--accent2)"
+          : "var(--accent)";
+        document.getElementById("path-steps").innerHTML = steps
+          .map(
+            (s, i) =>
+              `<div class="path-step"><div class="step-num ${isGreen ? "green" : ""}">${i + 1}</div><span>${s}</span></div>`,
+          )
+          .join("");
+        if (dist !== null) {
+          document.getElementById("dist-badge").style.display = "flex";
+          document.getElementById("dist-val").textContent = dist + "m";
+        } else document.getElementById("dist-badge").style.display = "none";
+        document.getElementById("result-panel").classList.add("show");
+      }
+
+      canvas.addEventListener("click", async (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left,
+          my = e.clientY - rect.top;
+        let hit = -1;
+        BUILDINGS.forEach((b) => {
+          if (
+            mx >= bx(b) - 44 &&
+            mx <= bx(b) + 44 &&
+            my >= by(b) - 30 &&
+            my <= by(b) + 30
+          )
+            hit = b.id;
+        });
+        if (hit < 0) return;
+        document
+          .querySelectorAll(".bld-item")
+          .forEach((el, i) => el.classList.toggle("active", i === hit));
+        if (mode === "all") {
+          if (sel[0] === hit) {
+            sel = [];
+            hideInfoCard();
+            document.getElementById("i-sel").textContent = "none";
+            document.getElementById("result-panel").classList.remove("show");
+          } else {
+            sel = [hit];
+            document.getElementById("i-sel").textContent = BUILDINGS[hit].name;
+            showResult("Building info", [BUILDINGS[hit].name], null, false);
+            const info = await fetchBuildingInfo(BUILDINGS[hit].name);
+            showInfoCard(BUILDINGS[hit], info);
+          }
+          draw();
+          return;
+        }
+        if (mode === "bfs") {
+          sel = [hit];
+          const result = bfsFrom(hit);
+          bfsOrd = result.ord;
+          bfsTreeEdges = result.treeEdges;
+          pathIds = [];
+          hideInfoCard();
+          document.getElementById("i-sel").textContent = BUILDINGS[hit].name;
+          document.getElementById("i-dist").textContent = "—";
+          showResult(
+            "BFS from " + BUILDINGS[hit].name,
+            bfsOrd.map((i) => BUILDINGS[i].name),
+            null,
+            true,
+          );
+          draw();
+          return;
+        }
+        if (mode === "short") {
+          hideInfoCard();
+          if (sel.length === 0 || sel.length === 2) {
+            sel = [hit];
+            pathIds = [];
+            bfsOrd = [];
+            document.getElementById("i-sel").textContent =
+              BUILDINGS[hit].name + " → ?";
+            document.getElementById("i-dist").textContent = "—";
+            document.getElementById("result-panel").classList.remove("show");
+            document.getElementById("hint-text").textContent =
+              "Now click the destination";
+          } else if (sel[0] === hit) {
+            sel = [];
+            document.getElementById("hint-text").textContent =
+              "Click source · then destination";
+          } else {
+            sel.push(hit);
+            document.getElementById("hint-text").textContent =
+              "Finding shortest path...";
+            const r = await getShortestPath(sel[0], sel[1]);
+            if (r) {
+              pathIds = r.path;
+              bfsOrd = [];
+              document.getElementById("i-sel").textContent =
+                BUILDINGS[sel[0]].name + " → " + BUILDINGS[sel[1]].name;
+              document.getElementById("i-dist").textContent = r.dist + "m";
+              showResult(
+                "Shortest path",
+                r.path.map((i) => BUILDINGS[i].name),
+                r.dist,
+                false,
+              );
+              document.getElementById("hint-text").textContent =
+                "Numbers show stop order";
+            } else {
+              document.getElementById("hint-text").textContent =
+                "No path found between these buildings";
+            }
+          }
+          draw();
+        }
+      });
+
+      function buildList() {
+        const list = document.getElementById("bld-list");
+        list.innerHTML = "";
+        if (!BUILDINGS.length) {
+          list.innerHTML =
+            '<div style="color:var(--muted);font-size:12px;font-family:var(--mono)">No buildings yet</div>';
+          return;
+        }
+        BUILDINGS.forEach((b) => {
+          const el = document.createElement("div");
+          el.className = "bld-item";
+          el.innerHTML = `<div class="bld-icon" style="background:${b.fill}">${b.icon}</div><div class="bld-info"><div class="bld-name">${b.name}</div><div class="bld-sub">building #${b.id}</div></div>`;
+          el.onclick = () =>
+            canvas.dispatchEvent(
+              new MouseEvent("click", {
+                clientX: canvas.getBoundingClientRect().left + bx(b),
+                clientY: canvas.getBoundingClientRect().top + by(b),
+              }),
+            );
+          list.appendChild(el);
+        });
+      }
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      window.addEventListener("resize", () => {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        resize();
+      });
+
+      // Animation loop
+      function animate() {
+        draw();
+        requestAnimationFrame(animate);
+      }
+      loadData().then(() => animate());
+    </script>
+  </body>
+</html>

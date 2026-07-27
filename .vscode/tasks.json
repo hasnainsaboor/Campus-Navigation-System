@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build C++",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "src/main.cpp",
+                "src/Graph.cpp",
+                "-Iinclude",
+                "-o",
+                "app.exe"
+            ]
+        },
+        {
+            "label": "Run C++",
+            "type": "shell",
+            "command": "app.exe",
+            "dependsOn": "Build C++",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
